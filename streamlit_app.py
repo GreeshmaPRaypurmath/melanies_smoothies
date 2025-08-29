@@ -74,28 +74,30 @@ for fruit_chosen in ingredients_list:
  
 # Display chosen ingredients
 
+# Display chosen ingredients
 if ingredients_list:
+    # Build a clean string of ingredients
+    ingredients_string = ", ".join(ingredients_list)
 
-    ingredients_string = ' '#.join(ingredients_list)
- 
     for fruit_chosen in ingredients_list:
+        st.subheader(f"{fruit_chosen} Nutrition Information")
 
-        ingredients_string += fruit_chosen + ''
- 
-        search_on=pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
+        # Try to get SEARCH_ON value
+        search_on = pd_df.loc[pd_df['FRUIT_NAME'] == fruit_chosen, 'SEARCH_ON'].iloc[0]
 
-        #st.write('The search value for ', fruit_chosen,' is ', search_on, '.')
+        # Fallback: use FRUIT_NAME if SEARCH_ON is None or empty
+        if not search_on or pd.isna(search_on):
+            search_on = fruit_chosen
 
-        st.subheader(fruit_chosen + 'Nutrition Information')
-
-        fruityvice_response = requests.get("https://my.smoothiefroot.com/api/fruit/" + search_on)
-
-        fv_df=st.dataframe(data=fruityvice_response.json(),use_container_width=True)
-
-        #smoothiefroot_response = requests.get("https://my.smoothiefroot.com/api/fruit/watermelon" + fruit_chosen)
-
-        #sf_df=st.dataframe(data=smoothiefroot_response.json(),use_container_width=True)
- 
+        try:
+            fruityvice_response = requests.get(
+                f"https://my.smoothiefroot.com/api/fruit/{search_on}",
+                timeout=10
+            )
+            fruityvice_response.raise_for_status()
+            fv_df = st.dataframe(data=fruityvice_response.json(), use_container_width=True)
+        except Exception as e:
+            st.error(f"Could not fetch data for {fruit_chosen}: {e}")
         
  
     # Build SQL insert statement
